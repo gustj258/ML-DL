@@ -24,35 +24,43 @@ inspect(rules[1:5])
 rules <- sort(rules, by = "confidence", decreasing = TRUE)
 inspect(rules[1:5])
 
+#이항 분포 만들고 계산하기
 set.seed(0)
-x <- rbinom(1000, 10, 0.3)
-hist(x)
-mean(x)
-var(x)
+x <- rbinom(1000, 10, 0.3) #n=10, p=0.3인 이항 분포에서 난수 1,000개 생성
+hist(x) #히스토그램
+mean(x) #평균
+var(x) #분산
 
-rx = rpois(3000, 2)
-mean(rx)
+#포아송 분포 만들고 히스토그램 그리기
+rx = rpois(3000, 2) #포아송 분포에서 lambda는 2, 난수 3,000개 생성
+mean(rx) #지정된 lambda와 거의 같은 값이 평균, 포아송 분포의 특징
 var(rx)
-hist(rx, probability=TRUE)
-rnorm(1, 100, 16)
+hist(rx, probability=TRUE) # y축에 확률 값을 지정한 히스토그램
+rnorm(1, 100, 16) #평균 = 100, 편차=16인 정규 분포에서 난수 1개 생성
 x=rnorm(100)
+hist(x, probability=TRUE) # 표준 정규 분포에서 난수 100개 생성
+curve(dnorm(x), add=T) #정규 분포 PDF 표현, 곡선 추가
+#t 분포 만들고 히스토그램 그리기
+x=rt(100, df=3) # t 분포에서 자유도 3으로 난수 100개 생성
 hist(x, probability=TRUE)
-curve(dnorm(x), add=T)
-x=rt(100, df=3)
-hist(x, probability=TRUE)
-curve(dt(x, 3), add=T)
+curve(dt(x, 3), add=T) # t 분포 PDF 표현, 곡선 추가
 
-x=rchisq(100, 1)
+#카이제곱 분포 만들고 히스토그램 그리기
+x=rchisq(100, 1) #자유도 1에서 난수 100개 생성
 hist(x, probability=TRUE)
 curve(dchisq(x, 1), add=T)
 
-x <- rnorm(100, mean=0)
-shapiro.test(x)
+#정규성 검정하기
+x <- rnorm(100, mean=0) #정규 분포에서 난수 100개 생성
+shapiro.test(x) # 정규성 검정, 정규 분포를 따름
 
+y <- c02[, 5] #예제 데이터 중 5번째 열 선택
+shapiro.test(y) #정규 분포를 따르지 않음
+# 예제 데이터 확인
+# 쌍체 t 검정하기
 x1 <- c(51.4, 52.0, 45.5, 54.5, 52.3, 50.9, 52.7, 50.3, 53.8, 53.1)
 x2 <- c(50.1, 51.5, 45.9, 53.1, 51.8, 50.3, 52.0, 49.9, 52.5, 53.0)
-
-t.test(x1, x2, paired=TRUE, conf.level=0.95)
+t.test(x1, x2, paired=TRUE, conf.level=0.95) # x1과 x2평균 비교, 귀무 가설은 두 집단 모평균은 같음
 
 freq = c(22, 21, 22, 27 ,22, 36)   # 주사위를 150번 던졌을 때 눈별로 나온 빈도
 probs = c(1, 1, 1, 1, 1, 1)/6      # 이론적으로 각 눈은 동일한 확률로 나오는 것을 표현
