@@ -12,7 +12,7 @@ Groceries
 itemFrequencyPlot(Groceries, topN = 20, type = "absolute")
 
 #연관 규칙 분석을 위한 Apriori 알고리즘 적용하고 시각화하기
-#연관  발견하기 : Aprioori 적용, 최소 지지도 0.1% 최소 신뢰도 80%
+#연관 귳기 발견하기 : Aprioori 적용, 최소 지지도 0.1% 최소 신뢰도 80%
 rules <- apriori(Groceries, parameter = list(supp = 0.001, conf = 0.8))
 summary(rules)
 
@@ -67,35 +67,48 @@ probs = c(1, 1, 1, 1, 1, 1)/6      # 이론적으로 각 눈은 동일한 확률
 
 chisq.test(freq, p=probs)
 
+#상관관계 분석하고 시각화하기
 #install.packages("corrplot")
 library(corrplot)
 data(mtcars)
 mtcars.cor = cor(mtcars)
 
+# method 파라미터로는 square, ellipse, number, shade, color, pie 등이 있다.
 corrplot(mtcars.cor, method="circle")
+# 별 다른 옵션을 지정하지 않는 경우 기본값으로 보여지는 그래프
 corrplot.mixed(mtcars.cor)
 
-x1 = 1:10
-x2 = 10:1
+#강한 음의 상관관계가 있게 x1과 x2를 생성한다.
+x1 = 1:10 #x1은 1부터 10까지 1씩 늘어난다.
+x2 = 10:1 #x2는 10부터 1까지 1씩 줄어든다.
 
+#이 검정에서의 귀무 가설은 상관관계가 없는 것이고, 대립 가설은 상관관계 존재하는 것이다
+#검정 결과, p값이 0에 가까운 아주 작은 값이므로 귀무 가설을 기각한다. 즉 x1과 x2는 강한 음의 상관관계가 있다는 것을 보여준다
 cor.test(x1, x2)
 
-data(InsectSprays)
-attach(InsectSprays)
-str(InsectSprays)
+#분산분석하기
+#곤충 스프레이 예제
+#IV : 6종류의 살충제, DV: 각 살충제 이후 곤충의 수
+data(InsectSprays) # 예제 데이터를 불러오기
+attach(InsectSprays) #예제 데이터의 변수를 편하게 사용하기 위해 데이터프레임을 부착
+str(InsectSprays) # 예제 데이터의 구조를 확인
 
-mean(InsectSprays$count)
+mean(InsectSprays$count) 
 var(InsectSprays$count)
 table(InsectSprays$spray)
 mean(InsectSprays[InsectSprays$spray=="A", 1])
 
+#살충제 종류별 평균의 차이가 있는지를 보기 위해 일원 분산분석을 이용
 attach(InsectSprays)
-
+#살충제 자료는 등분산을 갖고 있음을 var.equal=TRUE를 통해 표현
 oneway.test(count~spray, var.equal=TRUE)
+# aov 함수 형식 : aov(종속 변수~그룹 변수, data=데이터프레임 이름)
 aov.out = aov(count~spray, data=InsectSprays)
 summary(aov.out)
 
+#그룹별 평균 차이에 대해서 가능한 그룹 쌍에 대해 쌍체 t 검정하기
 pairwise.t.test(count, spray, p.adjust="bonferroni")
+# 투키 HSD 검정하기
 TukeyHSD(aov.out)
 
 # 객체 할당
@@ -267,3 +280,24 @@ newton(f)
 
 f <- function(x) (x^3 + 3 * x^2 - 6 * x - 8) # x3+3x2-6x-8 함수에 적용
 newton(f)
+
+#인공신경망 실습
+#1. 패키지 설치 및 데이터 읽기
+#MNIST 예제 데이터를 사용한 인공 신경망의 실습. R에서 텐서플로 실행 시 PC 환경에 따라 오류가 발생한느 경우가 많아서 오류가 별로 없는 mxnet 패키지로
+#실습해보자(R 최신 버전을 지원하지 않는다는 오류)
+#install.packages("mxnet")
+#install.packages("DiagrammeR")
+#train <- read.csv("mnist_train.csv", header = TRUE)
+#test <- read.csv("mnist_test.csv", header = TRUE)
+#train = data.matrix(train)
+#test = data.matrix(test)
+
+#train.x = train[, 2:785]/255 # 데이터를 최대값인 255로 나눠서 정규화
+#train.y = train[,1]
+#test.x = test[, 2:785]/255
+#test.y = test[, 1]
+
+# ann을 구성하기
+#mx.set.seed(0)
+#model <- mx.mlp(train.x, train.y, hidden_node=c(100, 100, 100), out_node=10, out_activation="softmax", num.round=10, array.batch.size=32, learning.rate=0.05, eval.metric=mx.metric.accuracy, optimizer='sgd')
+#mx.set.seed 부분에서 막힘힘
