@@ -1,17 +1,26 @@
+#연관 규칙 분석 실습을 위한 패키지를 설치하고 로드하기
 #install.packages("arules")
 #install.packages("arulesViz")
 library(arules)
 library(arulesViz)
+#예제 데이터 불러오기
 library(datasets)
+#예제 데이터 로드하기
 data(Groceries)
+Groceries
+#많이 발생하는 아이템 상위 20개 출력하기
 itemFrequencyPlot(Groceries, topN = 20, type = "absolute")
 
+#연관 규칙 분석을 위한 Apriori 알고리즘 적용하고 시각화하기
+#연관 귳기 발견하기 : Aprioori 적용, 최소 지지도 0.1% 최소 신뢰도 80%
 rules <- apriori(Groceries, parameter = list(supp = 0.001, conf = 0.8))
 summary(rules)
 
 plot(rules)
+#Apriori 알고리즘 결과 필터링하기
+#결과 중 처음 5개만 출력
 inspect(rules[1:5])
-
+#신뢰도 기준으로 내림차순의 패턴들을 rules에 할당
 rules <- sort(rules, by = "confidence", decreasing = TRUE)
 inspect(rules[1:5])
 
