@@ -12,7 +12,7 @@ Groceries
 itemFrequencyPlot(Groceries, topN = 20, type = "absolute")
 
 #연관 규칙 분석을 위한 Apriori 알고리즘 적용하고 시각화하기
-#연관 귳기 발견하기 : Aprioori 적용, 최소 지지도 0.1% 최소 신뢰도 80%
+#연관  발견하기 : Aprioori 적용, 최소 지지도 0.1% 최소 신뢰도 80%
 rules <- apriori(Groceries, parameter = list(supp = 0.001, conf = 0.8))
 summary(rules)
 
