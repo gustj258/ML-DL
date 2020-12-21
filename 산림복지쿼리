@@ -1,0 +1,491 @@
+###################
+# Raw data tables #
+###################
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_FOWI_DATASET_CD_M_NONESB`
+(
+	# DDL.
+	FOWI_DATA_SET_TPCD BIGINT(20) PRIMARY KEY COMMENT "FOWI데이터셋구분코드",
+	FOWI_DATA_SET_NM VARCHAR(100) NOT NULL COMMENT "FOWI데이터셋명",
+	FOWI_DATA_SET_DSCRT VARCHAR(250) COMMENT "FOWI데이터셋설명",
+	FOWI_DATA_SET_UPPER_CD BIGINT(20) COMMENT "FOWI데이터셋상위코드",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# FK.
+	FOREIGN KEY (FOWI_DATA_SET_UPPER_CD) REFERENCES TB_KFS_FOWI_DATASET_CD_M_NONESB(FOWI_DATA_SET_TPCD) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_FILE_INFO_M_NONESB`
+(
+	# DDL.
+	FILE_INFO_CONNO BIGINT(20) PRIMARY KEY COMMENT "파일정보일련번호",
+	DATA_SET_TPCD BIGINT(20) NOT NULL COMMENT "데이터셋 구분코드",
+	PRTNR_STORE_CRSE VARCHAR(2000) NOT NULL COMMENT "상대저장경로",
+	FILE_AL_MGNTD BIGINT(20) NOT NULL COMMENT "파일전체크기",
+	FILE_FRMT_NM VARCHAR(20) NOT NULL COMMENT "파일포맷명",
+	FILE_CONT_DSCRT VARCHAR(200) COMMENT "파일내용설명",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# FK.
+	FOREIGN KEY (DATA_SET_TPCD) REFERENCES TB_KFS_FOWI_DATASET_CD_M_NONESB(FOWI_DATA_SET_TPCD) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_LCTN_SPTL_INFO_M_NONESB`
+(
+	# DDL.
+	LCTN_SPTL_CONNO BIGINT(20) PRIMARY KEY COMMENT "위치공간정보일련번호",
+	LCTN_SPACE_NM VARCHAR(50) COMMENT "위치공간명",
+	LCTN_SPACE_CENTR_LNGTD DECIMAL(10,7) COMMENT "위치공간중심경도",
+	LCTN_SPACE_CENTR_LTTD DECIMAL(10,7) COMMENT "위치공간중심위도",
+	EPSG_CRSST_CD_NO BIGINT(20) COMMENT "EPSG좌표계코드번호",
+	LCTN_SPACE_CENTR_XCRD DECIMAL(14,7) COMMENT "위치공간중심X좌표",
+	LCTN_SPACE_CENTR_YCRD DECIMAL(14,7) COMMENT "위치공간중심Y좌표",
+	SPTL_FILE_CONNO BIGINT(20) COMMENT "공간정보파일일련번호",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# FK.
+	FOREIGN KEY (SPTL_FILE_CONNO) REFERENCES TB_KFS_FILE_INFO_M_NONESB(FILE_INFO_CONNO) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+##########################
+# End of raw data tables #
+##########################
+
+
+
+###################
+# ESB data tables #
+###################
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_FOWI_DATASET_CD_M`
+(
+	# DDL.
+	# PRIMARY KEY should be replaced to NOT NULL.
+	FOWI_DATA_SET_TPCD BIGINT(20) NOT NULL COMMENT "FOWI데이터셋구분코드",
+	FOWI_DATA_SET_NM VARCHAR(100) NOT NULL COMMENT "FOWI데이터셋명",
+	FOWI_DATA_SET_DSCRT VARCHAR(250) COMMENT "FOWI데이터셋설명",
+	FOWI_DATA_SET_UPPER_CD BIGINT(20) COMMENT "FOWI데이터셋상위코드",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# ESB columns.
+	DATA_CONNO BIGINT(11) PRIMARY KEY AUTO_INCREMENT COMMENT "데이터일련번호",
+	OPERT_TPCD VARCHAR(1) NOT NULL COMMENT "작업구분코드",
+	OCCRR_DTM VARCHAR(17) NOT NULL COMMENT "발생일시",
+	CNTCT_BGN_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계시작일시",
+	CNTCT_PRCES_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계처리일시",
+	CNTCT_PRCES_STCD VARCHAR(1) NOT NULL DEFAULT 'N' COMMENT "연계처리상태코드",
+	TRNSA_ID VARCHAR(27) DEFAULT NULL COMMENT "트랜잭션ID",
+
+	# INDEX.
+	# PRIMARY KEY should be converted to INDEX, as it can be duplicated on change history.
+	INDEX (FOWI_DATA_SET_TPCD),
+	# FK.
+	# Table name should be replaced to ESB version.
+	FOREIGN KEY (FOWI_DATA_SET_UPPER_CD) REFERENCES TB_KFS_FOWI_DATASET_CD_M(FOWI_DATA_SET_TPCD) ON UPDATE CASCADE ON DELETE RESTRICT,
+
+	# For ESB.
+	# 2nd column should be replaced to primary key columns on original table.
+	UNIQUE INDEX (DATA_CONNO, FOWI_DATA_SET_TPCD),
+	INDEX (TRNSA_ID ASC, CNTCT_PRCES_STCD ASC),
+	INDEX (TRNSA_ID ASC),
+	INDEX (CNTCT_PRCES_STCD ASC)
+);
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_FILE_INFO_M`
+(
+	# DDL.
+	# PRIMARY KEY should be replaced to NOT NULL.
+	FILE_INFO_CONNO BIGINT(20) NOT NULL COMMENT "파일정보일련번호",
+	DATA_SET_TPCD BIGINT(20) NOT NULL COMMENT "데이터셋 구분코드",
+	PRTNR_STORE_CRSE VARCHAR(2000) NOT NULL COMMENT "상대저장경로",
+	FILE_AL_MGNTD BIGINT(20) NOT NULL COMMENT "파일전체크기",
+	FILE_FRMT_NM VARCHAR(20) NOT NULL COMMENT "파일포맷명",
+	FILE_CONT_DSCRT VARCHAR(200) COMMENT "파일내용설명",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# ESB columns.
+	DATA_CONNO BIGINT(11) PRIMARY KEY AUTO_INCREMENT COMMENT "데이터일련번호",
+	OPERT_TPCD VARCHAR(1) NOT NULL COMMENT "작업구분코드",
+	OCCRR_DTM VARCHAR(17) NOT NULL COMMENT "발생일시",
+	CNTCT_BGN_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계시작일시",
+	CNTCT_PRCES_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계처리일시",
+	CNTCT_PRCES_STCD VARCHAR(1) NOT NULL DEFAULT 'N' COMMENT "연계처리상태코드",
+	TRNSA_ID VARCHAR(27) DEFAULT NULL COMMENT "트랜잭션ID",
+
+	# INDEX.
+	# PRIMARY KEY should be converted to INDEX, as it can be duplicated on change history.
+	INDEX (FILE_INFO_CONNO),
+	# FK.
+	# Table name should be replaced to ESB version.
+	FOREIGN KEY (DATA_SET_TPCD) REFERENCES TB_KFS_FOWI_DATASET_CD_M(FOWI_DATA_SET_TPCD) ON UPDATE CASCADE ON DELETE RESTRICT,
+
+	# For ESB.
+	# 2nd column should be replaced to primary key columns on original table.
+	UNIQUE INDEX (DATA_CONNO, FILE_INFO_CONNO),
+	INDEX (TRNSA_ID ASC, CNTCT_PRCES_STCD ASC),
+	INDEX (TRNSA_ID ASC),
+	INDEX (CNTCT_PRCES_STCD ASC)
+);
+
+CREATE TABLE IF NOT EXISTS `TB_KFS_LCTN_SPTL_INFO_M`
+(
+	# DDL.
+	# PRIMARY KEY should be replaced to NOT NULL.
+	LCTN_SPTL_CONNO BIGINT(20) NOT NULL COMMENT "위치공간정보일련번호",
+	LCTN_SPACE_NM VARCHAR(50) COMMENT "위치공간명",
+	LCTN_SPACE_CENTR_LNGTD DECIMAL(10,7) COMMENT "위치공간중심경도",
+	LCTN_SPACE_CENTR_LTTD DECIMAL(10,7) COMMENT "위치공간중심위도",
+	EPSG_CRSST_CD_NO BIGINT(20) COMMENT "EPSG좌표계코드번호",
+	LCTN_SPACE_CENTR_XCRD DECIMAL(14,7) COMMENT "위치공간중심X좌표",
+	LCTN_SPACE_CENTR_YCRD DECIMAL(14,7) COMMENT "위치공간중심Y좌표",
+	SPTL_FILE_CONNO BIGINT(20) COMMENT "공간정보파일일련번호",
+	FRST_WRTNG_DTM DATETIME(6) NOT NULL COMMENT "최초작성일시",
+	LAST_UPDT_DTM DATETIME(6) NOT NULL COMMENT "최종수정일시",
+	DLT_DTM DATETIME(6) COMMENT "삭제일시",
+
+	# ESB columns.
+	DATA_CONNO BIGINT(11) PRIMARY KEY AUTO_INCREMENT COMMENT "데이터일련번호",
+	OPERT_TPCD VARCHAR(1) NOT NULL COMMENT "작업구분코드",
+	OCCRR_DTM VARCHAR(17) NOT NULL COMMENT "발생일시",
+	CNTCT_BGN_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계시작일시",
+	CNTCT_PRCES_DTM VARCHAR(17) DEFAULT NULL COMMENT "연계처리일시",
+	CNTCT_PRCES_STCD VARCHAR(1) NOT NULL DEFAULT 'N' COMMENT "연계처리상태코드",
+	TRNSA_ID VARCHAR(27) DEFAULT NULL COMMENT "트랜잭션ID",
+
+	# INDEX.
+	# PRIMARY KEY should be converted to INDEX, as it can be duplicated on change history.
+	INDEX (LCTN_SPTL_CONNO),
+	# FK.
+	# Table name should be replaced to ESB version.
+	FOREIGN KEY (SPTL_FILE_CONNO) REFERENCES TB_KFS_FILE_INFO_M(FILE_INFO_CONNO) ON UPDATE CASCADE ON DELETE RESTRICT,
+
+	# For ESB.
+	# 2nd column should be replaced to primary key columns on original table.
+	UNIQUE INDEX (DATA_CONNO, LCTN_SPTL_CONNO),
+	INDEX (TRNSA_ID ASC, CNTCT_PRCES_STCD ASC),
+	INDEX (TRNSA_ID ASC),
+	INDEX (CNTCT_PRCES_STCD ASC)
+);
+
+##########################
+# End of ESB data tables #
+##########################
+
+
+
+############
+# Triggers #
+############
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_INSERT_FOWI_DATASET_CD_M
+ # Change table name.
+ AFTER INSERT ON TB_KFS_FOWI_DATASET_CD_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FOWI_DATASET_CD_M VALUES                  
+   (
+    # Change column list.
+    NEW.FOWI_DATA_SET_TPCD,
+    NEW.FOWI_DATA_SET_NM,
+    NEW.FOWI_DATA_SET_DSCRT,
+    NEW.FOWI_DATA_SET_UPPER_CD,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,
+    "I",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_UPDATE_FOWI_DATASET_CD_M
+ # Change table name.
+ AFTER UPDATE ON TB_KFS_FOWI_DATASET_CD_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FOWI_DATASET_CD_M VALUES                  
+   (
+    # Change column list.
+    NEW.FOWI_DATA_SET_TPCD,
+    NEW.FOWI_DATA_SET_NM,
+    NEW.FOWI_DATA_SET_DSCRT,
+    NEW.FOWI_DATA_SET_UPPER_CD,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,
+    "U",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_DELETE_FOWI_DATASET_CD_M                  
+ # Change table name.
+ AFTER DELETE ON TB_KFS_FOWI_DATASET_CD_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FOWI_DATASET_CD_M VALUES                  
+   (
+    # Change column list.
+    OLD.FOWI_DATA_SET_TPCD,
+    OLD.FOWI_DATA_SET_NM,
+    OLD.FOWI_DATA_SET_DSCRT,
+    OLD.FOWI_DATA_SET_UPPER_CD,
+    OLD.FRST_WRTNG_DTM,
+    OLD.LAST_UPDT_DTM,
+    OLD.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "D",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_INSERT_FILE_INFO_M
+ # Change table name.
+ AFTER INSERT ON TB_KFS_FILE_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FILE_INFO_M VALUES                  
+   (
+    # Change column list.
+    NEW.FILE_INFO_CONNO,
+    NEW.DATA_SET_TPCD,
+    NEW.PRTNR_STORE_CRSE,
+    NEW.FILE_AL_MGNTD,
+    NEW.FILE_FRMT_NM,
+    NEW.FILE_CONT_DSCRT,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "I",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_UPDATE_FILE_INFO_M
+ # Change table name.
+ AFTER UPDATE ON TB_KFS_FILE_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FILE_INFO_M VALUES                  
+   (
+    # Change column list.
+    NEW.FILE_INFO_CONNO,
+    NEW.DATA_SET_TPCD,
+    NEW.PRTNR_STORE_CRSE,
+    NEW.FILE_AL_MGNTD,
+    NEW.FILE_FRMT_NM,
+    NEW.FILE_CONT_DSCRT,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "U",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_DELETE_FILE_INFO_M                  
+ # Change table name.
+ AFTER DELETE ON TB_KFS_FILE_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_FILE_INFO_M VALUES                  
+   (
+    # Change column list.
+    OLD.FILE_INFO_CONNO,
+    OLD.DATA_SET_TPCD,
+    OLD.PRTNR_STORE_CRSE,
+    OLD.FILE_AL_MGNTD,
+    OLD.FILE_FRMT_NM,
+    OLD.FILE_CONT_DSCRT,
+    OLD.FRST_WRTNG_DTM,
+    OLD.LAST_UPDT_DTM,
+    OLD.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "D",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_INSERT_LCTN_SPTL_INFO_M
+ # Change table name.
+ AFTER INSERT ON TB_KFS_LCTN_SPTL_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_LCTN_SPTL_INFO_M VALUES                  
+   (
+    # Change column list.
+    NEW.LCTN_SPTL_CONNO,
+    NEW.LCTN_SPACE_NM,
+    NEW.LCTN_SPACE_CENTR_LNGTD,
+    NEW.LCTN_SPACE_CENTR_LTTD,
+    NEW.EPSG_CRSST_CD_NO,
+    NEW.LCTN_SPACE_CENTR_XCRD,
+    NEW.LCTN_SPACE_CENTR_YCRD,
+    NEW.SPTL_FILE_CONNO,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "I",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_UPDATE_LCTN_SPTL_INFO_M
+ # Change table name.
+ AFTER UPDATE ON TB_KFS_LCTN_SPTL_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_LCTN_SPTL_INFO_M VALUES                  
+   (
+    # Change column list.
+    NEW.LCTN_SPTL_CONNO,
+    NEW.LCTN_SPACE_NM,
+    NEW.LCTN_SPACE_CENTR_LNGTD,
+    NEW.LCTN_SPACE_CENTR_LTTD,
+    NEW.EPSG_CRSST_CD_NO,
+    NEW.LCTN_SPACE_CENTR_XCRD,
+    NEW.LCTN_SPACE_CENTR_YCRD,
+    NEW.SPTL_FILE_CONNO,
+    NEW.FRST_WRTNG_DTM,
+    NEW.LAST_UPDT_DTM,
+    NEW.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "U",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+DELIMITER $$
+# Change trigger name using table name.
+CREATE DEFINER=`fowi_dataset`@`%` TRIGGER ESB_DELETE_LCTN_SPTL_INFO_M                  
+ # Change table name.
+ AFTER DELETE ON TB_KFS_LCTN_SPTL_INFO_M_NONESB                  
+ FOR EACH ROW                  
+  BEGIN
+   # Change table name.
+   INSERT INTO TB_KFS_LCTN_SPTL_INFO_M VALUES                  
+   (
+    # Change column list.
+    OLD.LCTN_SPTL_CONNO,
+    OLD.LCTN_SPACE_NM,
+    OLD.LCTN_SPACE_CENTR_LNGTD,
+    OLD.LCTN_SPACE_CENTR_LTTD,
+    OLD.EPSG_CRSST_CD_NO,
+    OLD.LCTN_SPACE_CENTR_XCRD,
+    OLD.LCTN_SPACE_CENTR_YCRD,
+    OLD.SPTL_FILE_CONNO,
+    OLD.FRST_WRTNG_DTM,
+    OLD.LAST_UPDT_DTM,
+    OLD.DLT_DTM,
+    # Contents of ESB columns.
+    DEFAULT,                  
+    "D",                  
+    SUBSTRING(date_format(CURRENT_TIMESTAMP,'%Y%m%d%H%i%S%f'),1,17),                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT,                  
+    DEFAULT                  
+   );                  
+  END
+$$
+DELIMITER ;
+
+###################
+# End of triggers #
+###################
