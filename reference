@@ -1,0 +1,125 @@
+# 부품ID를 읽어서 호환 OE번호를 검색후 file에 write하는 프로그램
+# pymssql 패키지 import
+import pymysql
+
+import csv
+import os
+
+conn = pymysql.connect(host='106.255.245.178', user='id', password='passwd', database='mysql',
+                       charset='utf8')
+
+f_mf = open('sel_parts_list.txt', 'r', encoding='euc-kr')
+f_out = open('oem_list.csv', 'w+', encoding='utf-8', newline='')
+rdr1 = csv.reader(f_mf)
+wr = csv.writer(f_out)
+
+# Connection 으로부터 Cursor 생성
+cursor = conn.cursor()
+
+sql1= """SELECT tex_text, SUP_BRAND, ART_ARTICLE_NR
+  FROM
+    parts_tc.des_texts
+       join parts_tc.designations on designations.des_tex_id = des_texts.tex_id
+       join parts_tc.articles on articles.ART_COMPLETE_DES_ID = designations.des_id and DES_LNG_ID=38
+       join parts_tc.suppliers on sup_id = articles.art_sup_id
+       where articles.ART_ID = %s;"""
+
+
+sql = """  SELECT IFNULL(BRA_BRAND, 'EAN') AS BRANDS,
+        ARL_DISPLAY_NR
+  FROM
+        parts_tc.ART_LOOKUP
+        LEFT JOIN parts_tc.BRANDS ON BRA_ID = ARL_BRA_ID
+        INNER JOIN parts_tc.ARTICLES ON ARTICLES.ART_ID = ART_LOOKUP.ARL_ART_ID
+        INNER JOIN parts_tc.SUPPLIERS ON SUPPLIERS.SUP_ID = ARTICLES.ART_SUP_ID
+  WHERE
+        ARL_ART_ID = %s AND
+        ARL_KIND IN (3, 5)
+  ORDER BY
+        ARL_KIND DESC, BRANDS ASC;"""
+
+for i, mf in enumerate(rdr1):
+    if( mf[0][-3:] != 'JPG' or mf[0].find('복사본')>-1):
+        print("======================================not JPG")
+        continue
+    art_id = mf[0][-11:-4]
+    cursor.execute(sql1, art_id)
+    row = cursor.fetchone()
+
+    parts_name = row[0]
+    brand = row[1]
+    parts_no = row[2]
+
+    print("ROW ===> ", art_id, '|', parts_name, '|', brand)
+    parts_info = ' PARTS_ID: ' + art_id + ',   PARTS_NO: ' + parts_no + ',   PARTS_NAME: ' + parts_name + ',   BRAND: ' + brand
+    print(parts_info)
+    wr.writerow([parts_info])
+
+    wr.writerow(['BRAND', 'OE NUM'])
+    print("image name =>" , art_id)
+    print("sql execute ===>"+ mf[0])
+    cursor.execute(sql, art_id)
+
+# 데이타 하나씩 Fetch하여 출력
+    row = cursor.fetchone()
+    while row:
+        print(row[0], '|', row[1])
+        wr.writerow([row[0], row[1]])
+        row = cursor.fetchone()
+    wr.writerow([''])
+
+f_mf.close()
+
+conn.close()
+f_out.close()
+
+
+### DB Connecte
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# For disabling bytecode generation.
+import sys
+sys.dont_write_bytecode = True
+
+import DB
+
+import openpyxl
+import pprint
+
+
+
+if len(sys.argv) < 2: 
+    print("Usage : {} (sheet file)".format(sys.argv[0])) 
+    exit(1)
+
+input_path="산림복지 기관 설명.xlsx" 
+wb = openpyxl.load_workbook(input_path, data_only=True)
+
+with DB.MySQL \
+(
+  host='127.0.0.1',
+  port=3306,
+  user='fowi_dataset',
+  pw='0000',
+  db='forest'
+) as db:
+  for ws in wb.worksheets:
+    table_name = ws.title.upper()
+    if not table_name.endswith("_NONESB"):
+      table_name += "_NONESB"
+    data = [[c.value for c in r] for r in ws.rows][1:]
+
+    # All data row should have same length.
+    length = set(len(row) for row in data)
+    assert(len(length) == 1)
+    length = next(iter(length))
+
+    db.begin()
+    db.exec_query("INSERT INTO {} VALUES ({})".format(table_name, ",".join(["%s"] * length)), data)
+    # For loading data contains zero-length string instead of blank.
+    #for d in data:
+    #  # Substitute zero string to null.
+    #  d = [None if (type(c) == str) and (not len(c)) else c for c in d]
+    #  db.exec_query("INSERT INTO {} VALUES ({})".format(table_name, ",".join(["%s"] * length)), [d])
+    db.commit()
